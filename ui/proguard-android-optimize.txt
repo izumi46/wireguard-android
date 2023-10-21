@@ -33,3 +33,28 @@
 -keepclasseswithmembers class * {
     @androidx.annotation.Keep <init>(...);
 }
+
+-keep class com.sun.jna.** { *; }
+-keep interface com.sun.jna.** { *; }
+-keep enum com.sun.jna.** { *; }
+
+-keep class org.slf4j.** { *; }
+-keep interface org.slf4j.** { *; }
+-keep enum org.slf4j.** { *; }
+
+-keep class javax.naming.** { *; }
+-keep interface javax.naming.** { *; }
+-keep enum javax.naming.** { *; }
+-keep class sun.net.spi.nameservice.** { *; }
+
+-keep class org.xbill.DNS.** { *; }
+
+-keep class lombok.** { *; }
+
+
+-dontwarn com.sun.jna.**
+-dontwarn org.slf4j.**
+-dontwarn javax.naming.**
+-dontwarn sun.net.spi.nameservice.**
+-dontwarn lombok.**
+-dontwarn org.xbill.DNS.**

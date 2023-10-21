@@ -67,6 +67,7 @@ android {
 dependencies {
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.collection)
+    implementation("dnsjava:dnsjava:3.5.2")
     compileOnly(libs.jsr305)
     testImplementation(libs.junit)
 }

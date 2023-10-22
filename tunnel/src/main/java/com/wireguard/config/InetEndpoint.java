@@ -99,23 +99,33 @@ public final class InetEndpoint {
                 try {
                     if (port == 0) {
                         String domain = "_wg._udp." + host;
-                        Log.w(TAG, "Lookup SRV record for: " + domain);
+                        Log.i(TAG, "Lookup SRV record for: " + domain);
                         Lookup lookup = new Lookup(domain, Type.SRV);
+                        lookup.setResolver(new DohResolver("https://223.5.5.5/dns-query"));
                         org.xbill.DNS.Record[] records = lookup.run();
-                        if (records == null) {
-                            Log.w(TAG, "No SRV records found, trying fallback server...");
-                            lookup.setResolver(new SimpleResolver("223.5.5.5"));
-                            records = lookup.run();
-                        }
-                        if (records != null) {
-                            for (org.xbill.DNS.Record record : records) {
-                                if (record instanceof SRVRecord) {
-                                    SRVRecord srvRecord = (SRVRecord) record;
-                                    String target = srvRecord.getTarget().toString();
-                                    int target_port = srvRecord.getPort();
-                                    Log.w(TAG, "SRV record found. Target: " + target + ", port: " + target_port);
-                                    resolved = new InetEndpoint(InetAddress.getByName(target).getHostAddress(), true, target_port);
-                                    break;
+                        if (records == null)
+                            Log.w(TAG, "No SRV record found for " + domain);
+                        for (org.xbill.DNS.Record record : records) {
+                            if (resolved != null)
+                                break;
+                            if (record instanceof SRVRecord) {
+                                SRVRecord srvRecord = (SRVRecord) record;
+                                String target = srvRecord.getTarget().toString();
+                                int target_port = srvRecord.getPort();
+                                Log.i(TAG, "SRV record found. Target: " + target + ", port: " + target_port);
+                                Lookup targetLookup = new Lookup(target, Type.A);
+                                targetLookup.setResolver(new DohResolver("https://223.5.5.5/dns-query"));
+                                org.xbill.DNS.Record[] targetRecords = targetLookup.run();
+                                if (targetRecords == null)
+                                    Log.w(TAG, "No A record found for " + target);
+                                for (org.xbill.DNS.Record targetRecord : targetRecords) {
+                                    if (resolved != null)
+                                        break;
+                                    if (targetRecord instanceof ARecord) {
+                                        ARecord aRecord = (ARecord) targetRecord;
+                                        resolved = new InetEndpoint(aRecord.getAddress().getHostAddress(), true, target_port);
+                                        Log.i(TAG, "Target found: " + aRecord.getAddress().getHostAddress() + ":" + target_port);
+                                    }
                                 }
                             }
                         }
@@ -135,6 +145,8 @@ public final class InetEndpoint {
                 } catch (final UnknownHostException e) {
                     resolved = null;
                 } catch (final TextParseException e) {
+                    resolved = null;
+                } catch (final NullPointerException e) {
                     resolved = null;
                 }
             }

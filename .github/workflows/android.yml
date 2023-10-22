@@ -24,13 +24,33 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+    - name: Decode Keystore
+      uses: timheuer/base64-to-file@v1.2
+      with:
+        fileName: 'keystore.jks'
+        fileDir: '/home/runner/work/wireguard-android/wireguard-android/ui/'
+        encodedString: ${{ secrets.KEYSTORE }}
     - name: Build with Gradle
       env:
         PASSWD: ${{ secrets.PASSWD }}
         ALIAS: ${{ secrets.ALIAS }}
-      run: |
-        echo "storePassword=$PASSWD" >> keystore.properties
-        echo "keyPassword=$PASSWD" >> keystore.properties
-        echo "keyAlias=$ALIAS" >> keystore.properties
-        echo "storeFile=keystore.jks" >> keystore.properties
-        ./gradlew assembleRelease
+      run: ./gradlew assembleRelease
+    - name: Get Version
+      id: get-version
+      run: echo ::set-output name=version::$(grep wireguardVersionName gradle.properties | cut -d'=' -f2)
+    - name: Upload APK
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: wireguard-android
+        path: ui/build/outputs/apk/release/ui-release.apk
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get-version.outputs.version }}
+        draft: false
+        prerelease: false
+        files: ui/build/outputs/apk/release/ui-release.apk
+    

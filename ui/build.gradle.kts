@@ -12,9 +12,6 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
 }
 
-val keystoreProperties = Properties()
-keystoreProperties.load(project.rootProject.file("keystore.properties").inputStream())
-
 android {
     compileSdk = 34
     buildFeatures {
@@ -38,10 +35,10 @@ android {
     }
     signingConfigs {
         create("release") {
-            storeFile = file(keystoreProperties.getProperty("storeFile"))
-            storePassword = keystoreProperties.getProperty("storePassword")
-            keyAlias = keystoreProperties.getProperty("keyAlias")
-            keyPassword = keystoreProperties.getProperty("keyPassword")
+            storeFile = file("keystore.jks")
+            storePassword = System.getenv("PASSWD")
+            keyAlias = System.getenv("ALIAS")
+            keyPassword = System.getenv("PASSWD")
         }
     }
     buildTypes {
